@@ -55,7 +55,8 @@ export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient()
   const invalidate = useInvalidateConversationList()
   return useMutation({
-    mutationFn: (content: string) => conversationsApi.sendMessage(conversationId, content),
+    mutationFn: ({ content, documentIds }: { content: string; documentIds?: string[] }) =>
+      conversationsApi.sendMessage(conversationId, content, documentIds),
     onSuccess: ({ userMessage }) => {
       // Show the user's message instantly; the AI reply arrives via socket
       queryClient.setQueryData<ConversationDetail>(

@@ -6,7 +6,13 @@
 import { logger } from '../../shared/logger'
 import { settingsService } from '../../domains/settings/settings.service'
 import { conversationsRepository } from '../../domains/conversations/conversations.repository'
-import { getProviderForUser, MissingApiKeyError } from '../../infrastructure/ai/ai.provider.factory'
+import {
+  getProviderForUser,
+  resolveApiKeyForUser,
+  MissingApiKeyError,
+} from '../../infrastructure/ai/ai.provider.factory'
+import { embedTexts } from '../../infrastructure/ai/embeddings'
+import { vectorService } from '../../infrastructure/vector/vector.service'
 import type { ChatMessage } from '../../infrastructure/ai/ai.provider.interface'
 import { getIO } from '../socket.server'
 
@@ -15,13 +21,45 @@ const SYSTEM_PROMPT =
   'Answer in Markdown. Keep responses focused and practical.'
 
 const HISTORY_LIMIT = 20
+const RAG_CHUNK_LIMIT = 6
+
+// Best-effort document grounding: embed the question, pull the most similar
+// chunks from the attached documents, and prepend them as context.
+async function buildContextBlock(
+  userId: string,
+  question: string,
+  documentIds: string[],
+): Promise<string> {
+  try {
+    const apiKey = await resolveApiKeyForUser(userId)
+    const [embedding] = await embedTexts(apiKey, [question])
+    const hits = await vectorService.similaritySearch(userId, embedding, {
+      documentIds,
+      limit: RAG_CHUNK_LIMIT,
+    })
+    if (hits.length === 0) return ''
+
+    const excerpts = hits
+      .map((h) => `### ${h.documentTitle}\n${h.excerpt}`)
+      .join('\n\n')
+    return (
+      '\n\nThe user attached documents. Ground your answer in these excerpts ' +
+      'and mention the document titles you drew from:\n\n' +
+      excerpts
+    )
+  } catch (err) {
+    logger.warn({ err, userId }, 'RAG grounding failed — answering without context')
+    return ''
+  }
+}
 
 export async function streamAiResponse(params: {
   userId: string
   conversationId: string
   streamId: string
+  documentIds?: string[]
 }): Promise<void> {
-  const { userId, conversationId, streamId } = params
+  const { userId, conversationId, streamId, documentIds } = params
   const room = `conversation:${conversationId}`
   const io = getIO()
 
@@ -40,9 +78,15 @@ export async function streamAiResponse(params: {
         content: m.content,
       }))
 
+    const lastUserMessage = [...history].reverse().find((m) => m.role === 'user')
+    const contextBlock =
+      documentIds?.length && lastUserMessage
+        ? await buildContextBlock(userId, lastUserMessage.content, documentIds)
+        : ''
+
     const result = await provider.streamChat({
       model: settings.openaiModel,
-      messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history],
+      messages: [{ role: 'system', content: SYSTEM_PROMPT + contextBlock }, ...history],
       onToken: (token) => io.to(room).emit('ai:token', { streamId, token }),
     })
 

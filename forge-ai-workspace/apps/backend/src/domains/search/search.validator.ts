@@ -6,3 +6,8 @@ export const searchQuerySchema = z.object({
   types: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(20).default(5),
 })
+
+export const semanticQuerySchema = z.object({
+  q: z.string().min(1).max(500),
+  limit: z.coerce.number().int().min(1).max(10).default(5),
+})

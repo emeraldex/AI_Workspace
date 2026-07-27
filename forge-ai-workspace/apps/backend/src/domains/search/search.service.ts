@@ -1,7 +1,11 @@
 // File: apps/backend/src/domains/search/search.service.ts
-// Purpose: Full-text search across tasks, documents, snippets, conversations in parallel
+// Purpose: Full-text search across tasks, documents, snippets, conversations in parallel,
+//          plus semantic (RAG) search over indexed document chunks
 
 import { prisma } from '../../infrastructure/database/prisma.client'
+import { embedTexts } from '../../infrastructure/ai/embeddings'
+import { resolveApiKeyForUser } from '../../infrastructure/ai/ai.provider.factory'
+import { vectorService } from '../../infrastructure/vector/vector.service'
 
 export const searchService = {
   async search(userId: string, query: string, types: string[], limit: number) {
@@ -72,6 +76,13 @@ export const searchService = {
       snippets,
       conversations,
     }
+  },
+
+  // Phase 8 §GET /search/semantic — cosine similarity over indexed chunks
+  async semanticSearch(userId: string, query: string, limit: number) {
+    const apiKey = await resolveApiKeyForUser(userId)
+    const [embedding] = await embedTexts(apiKey, [query])
+    return vectorService.similaritySearch(userId, embedding, { limit })
   },
 }
 

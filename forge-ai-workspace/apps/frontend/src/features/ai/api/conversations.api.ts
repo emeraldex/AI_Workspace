@@ -73,11 +73,26 @@ export const conversationsApi = {
     await apiClient.delete(`/conversations/${id}`)
   },
 
-  async sendMessage(id: string, content: string): Promise<SendMessageResult> {
+  async sendMessage(id: string, content: string, documentIds?: string[]): Promise<SendMessageResult> {
     const { data } = await apiClient.post<ApiResponse<SendMessageResult>>(
       `/conversations/${id}/messages`,
-      { content },
+      { content, ...(documentIds?.length && { documentIds }) },
     )
     return data.data
   },
+
+  /** Minimal document shape for the attacher. Fetched here (not from the
+   *  documents feature) because features must not import across boundaries. */
+  async listDocumentOptions(): Promise<DocumentOption[]> {
+    const { data } = await apiClient.get<PaginatedResponse<DocumentOption>>('/documents', {
+      params: { limit: 100 },
+    })
+    return data.data
+  },
+}
+
+export interface DocumentOption {
+  id: string
+  title: string
+  indexingStatus: 'PENDING' | 'INDEXING' | 'INDEXED' | 'FAILED'
 }

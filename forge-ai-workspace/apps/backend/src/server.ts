@@ -9,10 +9,13 @@ import { logger } from './shared/logger'
 import { prisma } from './infrastructure/database/prisma.client'
 import { redis } from './infrastructure/cache/redis.client'
 import { initSocketServer } from './sockets/socket.server'
+import { registerRagWorker } from './infrastructure/queue/workers/rag.worker'
+import { ragQueue } from './infrastructure/queue/queue.client'
 
 const app = createApp()
 const server = http.createServer(app)
 initSocketServer(server)
+registerRagWorker()
 
 server.listen(config.port, () => {
   logger.info(`🚀 Server running on port ${config.port} [${config.nodeEnv}]`)
@@ -21,6 +24,7 @@ server.listen(config.port, () => {
 async function shutdown(signal: string) {
   logger.info(`${signal} received — shutting down gracefully`)
   server.close(async () => {
+    await ragQueue.close()
     await prisma.$disconnect()
     redis.disconnect()
     logger.info('Server closed')

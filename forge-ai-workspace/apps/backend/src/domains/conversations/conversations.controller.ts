@@ -31,7 +31,7 @@ export const conversationsController = {
   },
 
   async sendMessage(req: Request, res: Response): Promise<void> {
-    const { content } = req.body
+    const { content, documentIds } = req.body
     const data = await conversationsService.sendMessage(req.params.id, req.user!.id, content)
 
     // Respond immediately; the AI reply streams to the socket room (Phase 8)
@@ -39,6 +39,7 @@ export const conversationsController = {
       userId: req.user!.id,
       conversationId: req.params.id,
       streamId: data.streamId,
+      documentIds,
     })
 
     res.status(201).json({ success: true, data })

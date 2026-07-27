@@ -2,26 +2,41 @@
 // Purpose: Documents page — collection sidebar + list, or editor when a
 //          document is selected via /documents/:documentId
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Plus, Search } from 'lucide-react'
 import { PageContainer } from '@shared/components/layout/PageContainer'
 import { Button } from '@shared/components/ui/Button'
 import { Input } from '@shared/components/ui/Input'
 import { useDebounce } from '@shared/hooks/useDebounce'
+import { useSocket } from '@shared/hooks/useSocket'
 import { CollectionTree } from '../components/CollectionTree'
 import { DocumentList } from '../components/DocumentList'
 import { DocumentEditor } from '../components/DocumentEditor'
-import { useCreateDocument } from '../hooks/useDocuments'
+import { DOCUMENTS_QUERY_KEY, useCreateDocument } from '../hooks/useDocuments'
 
 export function DocumentsPage() {
   const { documentId } = useParams<{ documentId: string }>()
   const navigate = useNavigate()
   const createDocument = useCreateDocument()
+  const socket = useSocket()
+  const queryClient = useQueryClient()
 
   const [collectionId, setCollectionId] = useState<string | undefined>()
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search)
+
+  // Live indexing-status updates from the RAG worker
+  useEffect(() => {
+    const onIndexed = () => {
+      void queryClient.invalidateQueries({ queryKey: [DOCUMENTS_QUERY_KEY] })
+    }
+    socket.on('document:indexed', onIndexed)
+    return () => {
+      socket.off('document:indexed', onIndexed)
+    }
+  }, [socket, queryClient])
 
   function handleCreate() {
     createDocument.mutate(

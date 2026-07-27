@@ -1,6 +1,7 @@
 // File: apps/backend/src/domains/documents/documents.service.ts
 import { documentsRepository } from './documents.repository'
 import { NotFoundError } from '../../shared/errors/AppError'
+import { enqueueRagIndex } from '../../infrastructure/queue/queue.client'
 
 function toDocDto(doc: any, includeBody = false) {
   return {
@@ -32,7 +33,7 @@ export const documentsService = {
 
   async create(userId: string, data: any) {
     const doc = await documentsRepository.create(userId, data)
-    // RAG indexing will be triggered here in Phase 12
+    void enqueueRagIndex({ documentId: doc.id, userId })
     return toDocDto(doc, true)
   },
 
@@ -40,7 +41,10 @@ export const documentsService = {
     const existing = await documentsRepository.findById(id, userId)
     if (!existing) throw new NotFoundError('Document')
     const doc = await documentsRepository.update(id, data)
-    // RAG re-indexing will be triggered here in Phase 12
+    // Re-index only when indexed content changed
+    if (data.title !== undefined || data.body !== undefined) {
+      void enqueueRagIndex({ documentId: id, userId })
+    }
     return toDocDto(doc)
   },
 

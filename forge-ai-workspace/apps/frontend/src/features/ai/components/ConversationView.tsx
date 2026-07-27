@@ -1,7 +1,7 @@
 // File: apps/frontend/src/features/ai/components/ConversationView.tsx
 // Purpose: Message history + live streaming bubble + composer for one conversation
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@shared/components/ui/Button'
 import { Card, CardContent } from '@shared/components/ui/Card'
@@ -11,11 +11,14 @@ import { useConversation, useSendMessage } from '../hooks/useConversations'
 import { useAiStream } from '../hooks/useAiStream'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
+import { DocumentAttacher } from './DocumentAttacher'
+import type { DocumentOption } from '../api/conversations.api'
 
 export function ConversationView({ conversationId }: { conversationId: string }) {
   const { data: conversation, isPending, isError, error, refetch } = useConversation(conversationId)
   const sendMessage = useSendMessage(conversationId)
   const { streamText, isStreaming, streamError, beginStream, clearError } = useAiStream(conversationId)
+  const [attachedDocs, setAttachedDocs] = useState<DocumentOption[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const messageCount = conversation?.messages.length ?? 0
@@ -25,9 +28,10 @@ export function ConversationView({ conversationId }: { conversationId: string })
 
   function handleSend(content: string) {
     clearError()
-    sendMessage.mutate(content, {
-      onSuccess: ({ streamId }) => beginStream(streamId),
-    })
+    sendMessage.mutate(
+      { content, documentIds: attachedDocs.map((d) => d.id) },
+      { onSuccess: ({ streamId }) => beginStream(streamId) },
+    )
   }
 
   if (isPending) {
@@ -77,6 +81,9 @@ export function ConversationView({ conversationId }: { conversationId: string })
         </p>
       )}
 
+      <div className="mb-2">
+        <DocumentAttacher attached={attachedDocs} onChange={setAttachedDocs} />
+      </div>
       <MessageInput disabled={sendMessage.isPending || isStreaming} onSend={handleSend} />
     </div>
   )
