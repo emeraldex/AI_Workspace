@@ -2,6 +2,7 @@
 // Purpose: Snippets page — search/language filters, card grid, create/edit dialog
 
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { PageContainer } from '@shared/components/layout/PageContainer'
 import { Button } from '@shared/components/ui/Button'
@@ -13,7 +14,11 @@ import { SnippetForm, COMMON_LANGUAGES } from '../components/SnippetForm'
 import type { Snippet, SnippetFilters } from '../api/snippets.api'
 
 export function SnippetsPage() {
-  const [filters, setFilters] = useState<SnippetFilters>({})
+  // Command-palette results link here with ?search=
+  const [searchParams] = useSearchParams()
+  const [filters, setFilters] = useState<SnippetFilters>(() => ({
+    search: searchParams.get('search') ?? undefined,
+  }))
   const [formOpen, setFormOpen] = useState(false)
   const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null)
 

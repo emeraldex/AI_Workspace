@@ -4,6 +4,7 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { CommandPalette } from '@shared/components/CommandPalette'
 
 export function AppShell({ headerExtras }: { headerExtras?: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export function AppShell({ headerExtras }: { headerExtras?: React.ReactNode }) {
           <Outlet />
         </main>
       </div>
+      <CommandPalette />
     </div>
   )
 }

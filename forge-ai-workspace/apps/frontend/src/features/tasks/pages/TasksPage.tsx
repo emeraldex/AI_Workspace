@@ -13,10 +13,11 @@ import { TaskForm } from '../components/TaskForm'
 import type { Task, TaskFilters as Filters } from '../api/tasks.api'
 
 export function TasksPage() {
-  // Seed the project filter from the URL (e.g. arriving via a project card)
+  // Seed filters from the URL (project cards and command-palette results link here)
   const [searchParams] = useSearchParams()
   const [filters, setFilters] = useState<Filters>(() => ({
     projectId: searchParams.get('projectId') ?? undefined,
+    search: searchParams.get('search') ?? undefined,
   }))
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)

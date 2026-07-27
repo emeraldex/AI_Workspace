@@ -4,6 +4,7 @@
 import { useNavigate } from 'react-router-dom'
 import { LogOut, PanelLeft } from 'lucide-react'
 import { Button } from '@shared/components/ui/Button'
+import { GlobalSearch } from '@shared/components/GlobalSearch'
 import { logout } from '@shared/lib/session'
 import { useAuthStore } from '@shared/stores/auth.store'
 import { useUIStore } from '@shared/stores/ui.store'
@@ -25,10 +26,13 @@ export function Header({ extras }: HeaderProps) {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b bg-surface px-4">
-      <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar">
-        <PanelLeft />
-      </Button>
+    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-surface px-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar">
+          <PanelLeft />
+        </Button>
+        <GlobalSearch />
+      </div>
 
       <div className="flex items-center gap-3">
         {extras}
