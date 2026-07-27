@@ -79,6 +79,13 @@ export interface TaskPage {
   pagination: { nextCursor: string | null; hasMore: boolean; total: number }
 }
 
+// Mirrors backend reorderSchema (tasks.validator.ts)
+export interface ReorderUpdate {
+  id: string
+  sortOrder: number
+  status?: TaskStatus
+}
+
 export const tasksApi = {
   async list(filters: TaskFilters, cursor?: string, limit = 20): Promise<TaskPage> {
     const params: Record<string, string | number> = { limit }
@@ -109,6 +116,10 @@ export const tasksApi = {
 
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/tasks/${id}`)
+  },
+
+  async reorder(updates: ReorderUpdate[]): Promise<void> {
+    await apiClient.patch('/tasks/reorder', { updates })
   },
 
   async listProjectOptions(): Promise<ProjectOption[]> {
