@@ -112,6 +112,18 @@ export function registerRagWorker(): void {
       logger.error({ err, documentId }, 'RAG indexing failed')
       await setStatus(documentId, 'FAILED').catch(() => undefined)
       notify(userId, documentId, 'FAILED')
+      // Notify only once the final attempt fails — retries would spam
+      if (job.attemptsMade >= (job.opts.attempts ?? 1) - 1) {
+        const { notificationsService } = await import('../../../domains/notifications/notifications.service')
+        await notificationsService
+          .create(userId, {
+            type: 'SYSTEM',
+            title: 'Document indexing failed',
+            body: `"${document.title}" could not be indexed for AI search. ${err instanceof Error ? err.message : ''}`.trim(),
+            metadata: { documentId },
+          })
+          .catch(() => undefined)
+      }
       throw err // let Bull retry per queue policy
     }
   })

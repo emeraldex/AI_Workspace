@@ -4,6 +4,7 @@
 import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@shared/stores/auth.store'
 import { AppShell } from '@shared/components/layout/AppShell'
+import { NotificationBell } from '@features/notifications/components/NotificationBell'
 import { LoginPage } from '@features/auth/pages/LoginPage'
 import { RegisterPage } from '@features/auth/pages/RegisterPage'
 import { DashboardPage } from '@features/dashboard/pages/DashboardPage'
@@ -41,7 +42,7 @@ export const router = createBrowserRouter([
     element: <RequireAuth />,
     children: [
       {
-        element: <AppShell />,
+        element: <AppShell headerExtras={<NotificationBell />} />,
         children: [
           { path: '/', element: <DashboardPage /> },
           { path: '/tasks', element: <TasksPage /> },

@@ -8,7 +8,13 @@ import { logout } from '@shared/lib/session'
 import { useAuthStore } from '@shared/stores/auth.store'
 import { useUIStore } from '@shared/stores/ui.store'
 
-export function Header() {
+interface HeaderProps {
+  /** Feature-provided widgets (e.g. notification bell) — injected from the
+   *  app layer so shared/ never imports from features/ */
+  extras?: React.ReactNode
+}
+
+export function Header({ extras }: HeaderProps) {
   const user = useAuthStore((s) => s.user)
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const navigate = useNavigate()
@@ -25,6 +31,7 @@ export function Header() {
       </Button>
 
       <div className="flex items-center gap-3">
+        {extras}
         <span className="text-sm text-muted-foreground">{user?.name}</span>
         <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Log out">
           <LogOut />

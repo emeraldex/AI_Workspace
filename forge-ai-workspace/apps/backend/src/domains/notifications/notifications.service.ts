@@ -2,6 +2,17 @@
 import { notificationsRepository } from './notifications.repository'
 import { NotificationType } from '@prisma/client'
 
+// Best-effort push to the user's connected sockets (Phase 8 §18).
+// Lazy require avoids a hard dependency on socket initialization order.
+function pushToSockets(userId: string, notification: unknown): void {
+  try {
+    const { getIO } = require('../../sockets/socket.server') as typeof import('../../sockets/socket.server')
+    getIO().to(`user:${userId}`).emit('notification:new', notification)
+  } catch {
+    /* no socket server in this process */
+  }
+}
+
 export const notificationsService = {
   async getAll(userId: string, filters: any) {
     const result = await notificationsRepository.findAll(userId, filters)
@@ -12,7 +23,9 @@ export const notificationsService = {
   },
 
   async create(userId: string, data: { type: NotificationType; title: string; body: string; metadata?: any }) {
-    return notificationsRepository.create(userId, data)
+    const notification = await notificationsRepository.create(userId, data)
+    pushToSockets(userId, notification)
+    return notification
   },
 
   async markRead(id: string, userId: string) {

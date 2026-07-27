@@ -5,12 +5,12 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 
-export function AppShell() {
+export function AppShell({ headerExtras }: { headerExtras?: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
+        <Header extras={headerExtras} />
         <main className="flex-1 overflow-y-auto bg-background">
           <Outlet />
         </main>
