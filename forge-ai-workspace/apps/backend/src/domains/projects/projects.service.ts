@@ -49,6 +49,13 @@ export const projectsService = {
     return { isArchived: true }
   },
 
+  async unarchive(id: string, userId: string) {
+    const project = await projectsRepository.findById(id, userId)
+    if (!project) throw new NotFoundError('Project')
+    await projectsRepository.update(id, { isArchived: false })
+    return { isArchived: false }
+  },
+
   async delete(id: string, userId: string) {
     const project = await projectsRepository.findById(id, userId)
     if (!project) throw new NotFoundError('Project')

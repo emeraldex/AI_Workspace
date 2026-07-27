@@ -3,18 +3,19 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Archive, ListTodo, Pencil, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, ListTodo, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@shared/components/ui/Badge'
 import { Button } from '@shared/components/ui/Button'
 import { Card, CardContent, CardHeader } from '@shared/components/ui/Card'
 import { ConfirmDialog } from '@shared/components/ui/ConfirmDialog'
-import { useArchiveProject, useDeleteProject } from '../hooks/useProjects'
+import { useArchiveProject, useDeleteProject, useUnarchiveProject } from '../hooks/useProjects'
 import type { Project } from '../api/projects.api'
 
 const DEFAULT_COLOR = '#3b82f6'
 
 export function ProjectCard({ project, onEdit }: { project: Project; onEdit: (p: Project) => void }) {
   const archiveProject = useArchiveProject()
+  const unarchiveProject = useUnarchiveProject()
   const deleteProject = useDeleteProject()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -64,7 +65,17 @@ export function ProjectCard({ project, onEdit }: { project: Project; onEdit: (p:
             <Button variant="ghost" size="icon" onClick={() => onEdit(project)} aria-label="Edit project">
               <Pencil />
             </Button>
-            {!project.isArchived && (
+            {project.isArchived ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => unarchiveProject.mutate(project.id)}
+                disabled={unarchiveProject.isPending}
+                aria-label="Restore project"
+              >
+                <ArchiveRestore />
+              </Button>
+            ) : (
               <Button
                 variant="ghost"
                 size="icon"

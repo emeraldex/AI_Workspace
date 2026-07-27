@@ -11,6 +11,7 @@ import {
   Code2,
   Settings,
   Hammer,
+  Wrench,
 } from 'lucide-react'
 import { cn } from '@shared/lib/utils'
 import { useUIStore } from '@shared/stores/ui.store'
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/documents', label: 'Documents', icon: FileText },
   { to: '/ai', label: 'AI Chat', icon: MessagesSquare },
   { to: '/snippets', label: 'Snippets', icon: Code2 },
+  { to: '/devtools', label: 'DevTools', icon: Wrench },
 ]
 
 function SidebarLink({

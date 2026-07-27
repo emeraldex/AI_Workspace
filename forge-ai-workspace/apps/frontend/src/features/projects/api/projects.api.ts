@@ -49,6 +49,10 @@ export const projectsApi = {
     await apiClient.patch(`/projects/${id}/archive`)
   },
 
+  async unarchive(id: string): Promise<void> {
+    await apiClient.patch(`/projects/${id}/unarchive`)
+  },
+
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/projects/${id}`)
   },

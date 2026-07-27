@@ -51,6 +51,22 @@ export function useDeleteConversation() {
   })
 }
 
+export function useRenameConversation() {
+  const queryClient = useQueryClient()
+  const invalidate = useInvalidateConversationList()
+  return useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      conversationsApi.rename(id, title),
+    onSuccess: (_, { id, title }) => {
+      queryClient.setQueryData<ConversationDetail>(
+        [CONVERSATIONS_QUERY_KEY, 'detail', id],
+        (prev) => (prev ? { ...prev, title } : prev),
+      )
+      invalidate()
+    },
+  })
+}
+
 export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient()
   const invalidate = useInvalidateConversationList()

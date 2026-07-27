@@ -52,6 +52,14 @@ export function useArchiveProject() {
   })
 }
 
+export function useUnarchiveProject() {
+  const invalidate = useInvalidateProjects()
+  return useMutation({
+    mutationFn: (id: string) => projectsApi.unarchive(id),
+    onSuccess: invalidate,
+  })
+}
+
 export function useDeleteProject() {
   const invalidate = useInvalidateProjects()
   return useMutation({

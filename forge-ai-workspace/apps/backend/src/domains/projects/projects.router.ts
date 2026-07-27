@@ -14,6 +14,7 @@ router.post('/', validate(createProjectSchema), h(projectsController.create))
 router.get('/:id', h(projectsController.getById))
 router.patch('/:id', validate(updateProjectSchema), h(projectsController.update))
 router.patch('/:id/archive', h(projectsController.archive))
+router.patch('/:id/unarchive', h(projectsController.unarchive))
 router.delete('/:id', h(projectsController.delete))
 
 export { router as projectsRouter }

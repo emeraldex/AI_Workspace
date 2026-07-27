@@ -15,6 +15,7 @@ import {
   MessagesSquare,
   Search,
   Settings,
+  Wrench,
 } from 'lucide-react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { globalSearch } from '@shared/api/search'
@@ -30,6 +31,7 @@ const NAV_COMMANDS = [
   { label: 'Go to Documents', to: '/documents', icon: FileText },
   { label: 'Go to AI Chat', to: '/ai', icon: MessagesSquare },
   { label: 'Go to Snippets', to: '/snippets', icon: Code2 },
+  { label: 'Go to DevTools', to: '/devtools', icon: Wrench },
   { label: 'Go to Settings', to: '/settings', icon: Settings },
 ]
 

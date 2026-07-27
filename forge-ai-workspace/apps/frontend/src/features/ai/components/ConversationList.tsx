@@ -3,20 +3,37 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@shared/components/ui/Button'
 import { ConfirmDialog } from '@shared/components/ui/ConfirmDialog'
+import { Input } from '@shared/components/ui/Input'
 import { Skeleton } from '@shared/components/ui/Skeleton'
 import { Spinner } from '@shared/components/ui/Spinner'
 import { cn, formatRelativeTime } from '@shared/lib/utils'
-import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations'
+import {
+  useConversations,
+  useCreateConversation,
+  useDeleteConversation,
+  useRenameConversation,
+} from '../hooks/useConversations'
 
 export function ConversationList({ selectedId }: { selectedId: string | undefined }) {
   const navigate = useNavigate()
   const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } = useConversations()
   const createConversation = useCreateConversation()
   const deleteConversation = useDeleteConversation()
+  const renameConversation = useRenameConversation()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameTitle, setRenameTitle] = useState('')
+
+  function commitRename(id: string, currentTitle: string) {
+    const trimmed = renameTitle.trim()
+    if (trimmed && trimmed !== currentTitle) {
+      renameConversation.mutate({ id, title: trimmed })
+    }
+    setRenamingId(null)
+  }
 
   function handleNew() {
     createConversation.mutate(undefined, {
@@ -51,32 +68,66 @@ export function ConversationList({ selectedId }: { selectedId: string | undefine
                 selectedId === conv.id ? 'bg-primary/10' : 'hover:bg-muted',
               )}
             >
-              <button
-                onClick={() => navigate(`/ai/${conv.id}`)}
-                className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2 py-1.5 text-left"
-              >
-                <span
-                  className={cn(
-                    'w-full truncate text-sm',
-                    selectedId === conv.id ? 'font-medium text-primary' : 'text-foreground',
-                  )}
+              {renamingId === conv.id ? (
+                <form
+                  className="flex-1 px-1 py-1"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    commitRename(conv.id, conv.title)
+                  }}
                 >
-                  {conv.title}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {conv.messageCount} message{conv.messageCount === 1 ? '' : 's'} ·{' '}
-                  {formatRelativeTime(conv.updatedAt)}
-                </span>
-              </button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0 opacity-0 hover:text-destructive group-hover:opacity-100"
-                aria-label={`Delete ${conv.title}`}
-                onClick={() => setDeletingId(conv.id)}
-              >
-                <Trash2 className="!h-3.5 !w-3.5" />
-              </Button>
+                  <Input
+                    autoFocus
+                    className="h-7 text-sm"
+                    value={renameTitle}
+                    onChange={(e) => setRenameTitle(e.target.value)}
+                    onBlur={() => commitRename(conv.id, conv.title)}
+                    onKeyDown={(e) => e.key === 'Escape' && setRenamingId(null)}
+                    aria-label="Conversation title"
+                  />
+                </form>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate(`/ai/${conv.id}`)}
+                    className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2 py-1.5 text-left"
+                  >
+                    <span
+                      className={cn(
+                        'w-full truncate text-sm',
+                        selectedId === conv.id ? 'font-medium text-primary' : 'text-foreground',
+                      )}
+                    >
+                      {conv.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {conv.messageCount} message{conv.messageCount === 1 ? '' : 's'} ·{' '}
+                      {formatRelativeTime(conv.updatedAt)}
+                    </span>
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100"
+                    aria-label={`Rename ${conv.title}`}
+                    onClick={() => {
+                      setRenameTitle(conv.title)
+                      setRenamingId(conv.id)
+                    }}
+                  >
+                    <Pencil className="!h-3.5 !w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 opacity-0 hover:text-destructive group-hover:opacity-100"
+                    aria-label={`Delete ${conv.title}`}
+                    onClick={() => setDeletingId(conv.id)}
+                  >
+                    <Trash2 className="!h-3.5 !w-3.5" />
+                  </Button>
+                </>
+              )}
             </div>
           ))}
           {hasNextPage && (

@@ -29,6 +29,11 @@ export const projectsController = {
     res.json({ success: true, data })
   },
 
+  async unarchive(req: Request, res: Response): Promise<void> {
+    const data = await projectsService.unarchive(req.params.id, req.user!.id)
+    res.json({ success: true, data })
+  },
+
   async delete(req: Request, res: Response): Promise<void> {
     await projectsService.delete(req.params.id, req.user!.id)
     res.status(204).send()
