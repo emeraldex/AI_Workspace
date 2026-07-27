@@ -5,6 +5,7 @@ import { Search } from 'lucide-react'
 import { Input } from '@shared/components/ui/Input'
 import { Select } from '@shared/components/ui/Select'
 import { STATUS_LABELS, PRIORITY_LABELS } from '@shared/lib/constants'
+import { useProjectOptions } from '../hooks/useTasks'
 import type { TaskFilters as Filters, TaskPriority, TaskStatus } from '../api/tasks.api'
 
 interface TaskFiltersProps {
@@ -13,6 +14,8 @@ interface TaskFiltersProps {
 }
 
 export function TaskFilters({ filters, onChange }: TaskFiltersProps) {
+  const { data: projectOptions } = useProjectOptions()
+
   return (
     <div className="mb-4 flex flex-wrap items-center gap-3">
       <div className="relative min-w-52 flex-1">
@@ -57,6 +60,20 @@ export function TaskFilters({ filters, onChange }: TaskFiltersProps) {
         {(Object.keys(PRIORITY_LABELS) as TaskPriority[]).map((priority) => (
           <option key={priority} value={priority}>
             {PRIORITY_LABELS[priority]}
+          </option>
+        ))}
+      </Select>
+
+      <Select
+        className="w-44"
+        value={filters.projectId ?? ''}
+        onChange={(e) => onChange({ ...filters, projectId: e.target.value || undefined })}
+        aria-label="Filter by project"
+      >
+        <option value="">All projects</option>
+        {(projectOptions ?? []).map((project) => (
+          <option key={project.id} value={project.id}>
+            {project.name}
           </option>
         ))}
       </Select>

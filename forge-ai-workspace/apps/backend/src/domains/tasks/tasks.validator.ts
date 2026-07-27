@@ -12,7 +12,12 @@ export const createTaskSchema = z.object({
   sortOrder: z.number().int().default(0),
 })
 
-export const updateTaskSchema = createTaskSchema.partial()
+// Updates additionally allow null for projectId/dueDate to clear them.
+// (dueDate uses a union because z.coerce.date() would turn null into 1970-01-01.)
+export const updateTaskSchema = createTaskSchema.partial().extend({
+  projectId: z.string().uuid().nullable().optional(),
+  dueDate: z.union([z.null(), z.coerce.date()]).optional(),
+})
 
 export const reorderSchema = z.object({
   updates: z.array(

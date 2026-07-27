@@ -2,6 +2,7 @@
 // Purpose: Tasks page — filter bar, task list, create/edit dialog
 
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { PageContainer } from '@shared/components/layout/PageContainer'
 import { Button } from '@shared/components/ui/Button'
@@ -12,7 +13,11 @@ import { TaskForm } from '../components/TaskForm'
 import type { Task, TaskFilters as Filters } from '../api/tasks.api'
 
 export function TasksPage() {
-  const [filters, setFilters] = useState<Filters>({})
+  // Seed the project filter from the URL (e.g. arriving via a project card)
+  const [searchParams] = useSearchParams()
+  const [filters, setFilters] = useState<Filters>(() => ({
+    projectId: searchParams.get('projectId') ?? undefined,
+  }))
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 

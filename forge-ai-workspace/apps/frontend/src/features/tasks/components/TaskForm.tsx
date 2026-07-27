@@ -19,6 +19,7 @@ import { Textarea } from '@shared/components/ui/Textarea'
 import { STATUS_LABELS, PRIORITY_LABELS } from '@shared/lib/constants'
 import { getApiErrorMessage } from '@shared/lib/apiError'
 import { useCreateTask, useUpdateTask } from '../hooks/useTaskMutations'
+import { useProjectOptions } from '../hooks/useTasks'
 import type { Task, TaskPriority, TaskStatus } from '../api/tasks.api'
 
 interface TaskFormValues {
@@ -27,6 +28,7 @@ interface TaskFormValues {
   status: TaskStatus
   priority: TaskPriority
   dueDate: string
+  projectId: string
 }
 
 interface TaskFormProps {
@@ -43,6 +45,7 @@ function toFormValues(task?: Task | null): TaskFormValues {
     status: task?.status ?? 'TODO',
     priority: task?.priority ?? 'MEDIUM',
     dueDate: task?.dueDate ? task.dueDate.slice(0, 10) : '',
+    projectId: task?.project?.id ?? '',
   }
 }
 
@@ -51,6 +54,7 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const mutation = isEdit ? updateTask : createTask
+  const { data: projectOptions } = useProjectOptions()
 
   const {
     register,
@@ -65,16 +69,34 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
   }, [open, task, reset])
 
   function onSubmit(values: TaskFormValues) {
-    const body = {
+    const base = {
       title: values.title,
       description: values.description || undefined,
       status: values.status,
       priority: values.priority,
-      dueDate: values.dueDate || undefined,
     }
     const options = { onSuccess: () => onOpenChange(false) }
-    if (task) updateTask.mutate({ id: task.id, ...body }, options)
-    else createTask.mutate(body, options)
+    if (task) {
+      // On update, empty selections send null to clear the field
+      updateTask.mutate(
+        {
+          id: task.id,
+          ...base,
+          dueDate: values.dueDate || null,
+          projectId: values.projectId || null,
+        },
+        options,
+      )
+    } else {
+      createTask.mutate(
+        {
+          ...base,
+          dueDate: values.dueDate || undefined,
+          projectId: values.projectId || undefined,
+        },
+        options,
+      )
+    }
   }
 
   return (
@@ -123,9 +145,22 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-due">Due date</Label>
-            <Input id="task-due" type="date" {...register('dueDate')} />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="task-due">Due date</Label>
+              <Input id="task-due" type="date" {...register('dueDate')} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="task-project">Project</Label>
+              <Select id="task-project" {...register('projectId')}>
+                <option value="">No project</option>
+                {(projectOptions ?? []).map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
 
           {mutation.isError && (

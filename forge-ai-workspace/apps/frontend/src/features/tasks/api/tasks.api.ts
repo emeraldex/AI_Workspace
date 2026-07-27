@@ -60,7 +60,19 @@ export interface CreateTaskInput {
   tagIds?: string[]
 }
 
-export type UpdateTaskInput = Partial<CreateTaskInput>
+// projectId/dueDate accept null on update to clear them (backend updateTaskSchema)
+export type UpdateTaskInput = Partial<Omit<CreateTaskInput, 'projectId' | 'dueDate'>> & {
+  projectId?: string | null
+  dueDate?: string | null
+}
+
+/** Minimal project shape for pickers. Fetched here (not from the projects
+ *  feature) because features must not import across feature boundaries. */
+export interface ProjectOption {
+  id: string
+  name: string
+  color: string | null
+}
 
 export interface TaskPage {
   data: Task[]
@@ -97,5 +109,10 @@ export const tasksApi = {
 
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/tasks/${id}`)
+  },
+
+  async listProjectOptions(): Promise<ProjectOption[]> {
+    const { data } = await apiClient.get<ApiResponse<ProjectOption[]>>('/projects')
+    return data.data
   },
 }
