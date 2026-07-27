@@ -4,7 +4,6 @@ dist/
 build/
 .env
 *.env.local
-prisma/migrations/
 coverage/
 .nyc_output/
 *.log
