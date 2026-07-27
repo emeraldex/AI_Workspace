@@ -4,8 +4,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { authApi } from '../api/auth.api'
+import { apiClient } from '@shared/api/client'
+import { applyTheme } from '@shared/lib/theme'
 import { useAuthStore } from '@shared/stores/auth.store'
-import type { LoginRequest, RegisterRequest } from '@forge/shared'
+import type { ApiResponse, LoginRequest, RegisterRequest, UserSettings } from '@forge/shared'
+
+// Best-effort: sync the saved theme once a session exists. Kept here (not in
+// the settings feature) so restoring a session on a fresh browser applies it.
+async function syncTheme() {
+  try {
+    const { data } = await apiClient.get<ApiResponse<UserSettings>>('/settings')
+    applyTheme(data.data.theme)
+  } catch {
+    // Theme stays on the pre-paint default
+  }
+}
 
 export function useLogin() {
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -38,6 +51,7 @@ export function useSessionRestore() {
         { id: profile.id, name: profile.name, email: profile.email, avatarUrl: profile.avatarUrl },
         accessToken,
       )
+      void syncTheme()
     } catch {
       clearAuth() // No valid refresh cookie — user simply isn't logged in
     } finally {
