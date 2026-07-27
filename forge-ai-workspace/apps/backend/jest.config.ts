@@ -8,7 +8,7 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@forge/shared$': '<rootDir>/../../packages/shared/src',
   },
-  setupFilesAfterFramework: [],
+  setupFiles: ['<rootDir>/tests/helpers/setupEnv.ts'],
   testMatch: ['**/tests/**/*.test.ts'],
   collectCoverageFrom: ['src/**/*.ts', '!src/server.ts'],
   coverageThreshold: {
