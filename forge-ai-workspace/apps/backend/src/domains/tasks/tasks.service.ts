@@ -15,7 +15,8 @@ function toTaskDto(task: any) {
     tags: task.taskTags?.map((tt: any) => tt.tag) ?? [],
     subtasks: task.subtasks ?? undefined,
     subtaskCount: task._count?.subtasks ?? task.subtasks?.length ?? 0,
-    completedSubtaskCount: task.subtasks?.filter((s: any) => s.isCompleted).length ?? 0,
+    completedSubtaskCount:
+      task.subtasks?.filter((s: any) => s.isCompleted).length ?? task.completedSubtaskCount ?? 0,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
   }

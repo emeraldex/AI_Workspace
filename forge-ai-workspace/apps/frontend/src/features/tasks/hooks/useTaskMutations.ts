@@ -47,3 +47,33 @@ export function useReorderTasks() {
     onSettled: invalidate,
   })
 }
+
+// Subtask mutations — invalidating the 'tasks' root covers the detail query
+// (subtask array) and the list/board (subtask progress counts).
+export function useCreateSubtask(taskId: string) {
+  const invalidate = useInvalidateTasks()
+  return useMutation({
+    mutationFn: (title: string) => tasksApi.createSubtask(taskId, title),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateSubtask(taskId: string) {
+  const invalidate = useInvalidateTasks()
+  return useMutation({
+    mutationFn: ({
+      subtaskId,
+      ...body
+    }: { subtaskId: string; title?: string; isCompleted?: boolean }) =>
+      tasksApi.updateSubtask(taskId, subtaskId, body),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteSubtask(taskId: string) {
+  const invalidate = useInvalidateTasks()
+  return useMutation({
+    mutationFn: (subtaskId: string) => tasksApi.removeSubtask(taskId, subtaskId),
+    onSuccess: invalidate,
+  })
+}

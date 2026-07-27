@@ -61,7 +61,25 @@ export const tasksRepository = {
     const hasMore = tasks.length > limit
     if (hasMore) tasks.pop()
 
-    return { tasks, total, hasMore, nextCursor: hasMore ? (tasks[tasks.length - 1]?.id ?? null) : null }
+    // _count only carries totals — fetch completed-subtask counts separately
+    // so list/board rows can show real progress (e.g. 1/2)
+    const completedCounts = await prisma.subtask.groupBy({
+      by: ['taskId'],
+      where: { taskId: { in: tasks.map((t) => t.id) }, isCompleted: true },
+      _count: { taskId: true },
+    })
+    const completedByTask = new Map(completedCounts.map((c) => [c.taskId, c._count.taskId]))
+    const tasksWithProgress = tasks.map((t) => ({
+      ...t,
+      completedSubtaskCount: completedByTask.get(t.id) ?? 0,
+    }))
+
+    return {
+      tasks: tasksWithProgress,
+      total,
+      hasMore,
+      nextCursor: hasMore ? (tasks[tasks.length - 1]?.id ?? null) : null,
+    }
   },
 
   async findById(id: string, userId: string) {

@@ -122,6 +122,27 @@ export const tasksApi = {
     await apiClient.patch('/tasks/reorder', { updates })
   },
 
+  async createSubtask(taskId: string, title: string): Promise<Subtask> {
+    const { data } = await apiClient.post<ApiResponse<Subtask>>(`/tasks/${taskId}/subtasks`, { title })
+    return data.data
+  },
+
+  async updateSubtask(
+    taskId: string,
+    subtaskId: string,
+    body: { title?: string; isCompleted?: boolean; sortOrder?: number },
+  ): Promise<Subtask> {
+    const { data } = await apiClient.patch<ApiResponse<Subtask>>(
+      `/tasks/${taskId}/subtasks/${subtaskId}`,
+      body,
+    )
+    return data.data
+  },
+
+  async removeSubtask(taskId: string, subtaskId: string): Promise<void> {
+    await apiClient.delete(`/tasks/${taskId}/subtasks/${subtaskId}`)
+  },
+
   async listProjectOptions(): Promise<ProjectOption[]> {
     const { data } = await apiClient.get<ApiResponse<ProjectOption[]>>('/projects')
     return data.data

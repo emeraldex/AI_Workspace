@@ -20,6 +20,7 @@ import { STATUS_LABELS, PRIORITY_LABELS } from '@shared/lib/constants'
 import { getApiErrorMessage } from '@shared/lib/apiError'
 import { useCreateTask, useUpdateTask } from '../hooks/useTaskMutations'
 import { useProjectOptions } from '../hooks/useTasks'
+import { SubtaskList } from './SubtaskList'
 import type { Task, TaskPriority, TaskStatus } from '../api/tasks.api'
 
 interface TaskFormValues {
@@ -162,6 +163,12 @@ export function TaskForm({ open, onOpenChange, task }: TaskFormProps) {
               </Select>
             </div>
           </div>
+
+          {task && (
+            <div className="mt-1 border-t pt-3">
+              <SubtaskList taskId={task.id} />
+            </div>
+          )}
 
           {mutation.isError && (
             <p role="alert" className="text-xs text-destructive">

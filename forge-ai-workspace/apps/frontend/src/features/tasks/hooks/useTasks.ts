@@ -15,6 +15,15 @@ export function useProjectOptions() {
   })
 }
 
+// Task detail — the only shape that includes the subtasks array
+export function useTask(id: string | undefined) {
+  return useQuery({
+    queryKey: [TASKS_QUERY_KEY, 'detail', id],
+    queryFn: () => tasksApi.get(id!),
+    enabled: Boolean(id),
+  })
+}
+
 export function useTasks(filters: TaskFilters) {
   return useInfiniteQuery({
     queryKey: [TASKS_QUERY_KEY, filters],
