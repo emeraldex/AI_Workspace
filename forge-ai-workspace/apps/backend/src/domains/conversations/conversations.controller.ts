@@ -1,6 +1,7 @@
 // File: apps/backend/src/domains/conversations/conversations.controller.ts
 import { Request, Response } from 'express'
 import { conversationsService } from './conversations.service'
+import { streamAiResponse } from '../../sockets/handlers/ai.handler'
 
 export const conversationsController = {
   async getAll(req: Request, res: Response): Promise<void> {
@@ -32,6 +33,14 @@ export const conversationsController = {
   async sendMessage(req: Request, res: Response): Promise<void> {
     const { content } = req.body
     const data = await conversationsService.sendMessage(req.params.id, req.user!.id, content)
+
+    // Respond immediately; the AI reply streams to the socket room (Phase 8)
+    void streamAiResponse({
+      userId: req.user!.id,
+      conversationId: req.params.id,
+      streamId: data.streamId,
+    })
+
     res.status(201).json({ success: true, data })
   },
 }

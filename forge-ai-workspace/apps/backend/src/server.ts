@@ -2,15 +2,19 @@
 // Purpose: HTTP server entry point — binds port, handles graceful shutdown
 
 import 'dotenv/config'
+import http from 'node:http'
 import { createApp } from './app'
 import { config } from './shared/config'
 import { logger } from './shared/logger'
 import { prisma } from './infrastructure/database/prisma.client'
 import { redis } from './infrastructure/cache/redis.client'
+import { initSocketServer } from './sockets/socket.server'
 
 const app = createApp()
+const server = http.createServer(app)
+initSocketServer(server)
 
-const server = app.listen(config.port, () => {
+server.listen(config.port, () => {
   logger.info(`🚀 Server running on port ${config.port} [${config.nodeEnv}]`)
 })
 
