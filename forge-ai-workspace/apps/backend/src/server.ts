@@ -10,12 +10,15 @@ import { prisma } from './infrastructure/database/prisma.client'
 import { redis } from './infrastructure/cache/redis.client'
 import { initSocketServer } from './sockets/socket.server'
 import { registerRagWorker } from './infrastructure/queue/workers/rag.worker'
-import { ragQueue } from './infrastructure/queue/queue.client'
+import { registerRemindersWorker } from './infrastructure/queue/workers/reminders.worker'
+import { ragQueue, remindersQueue, scheduleRemindersSweep } from './infrastructure/queue/queue.client'
 
 const app = createApp()
 const server = http.createServer(app)
 initSocketServer(server)
 registerRagWorker()
+registerRemindersWorker()
+scheduleRemindersSweep().catch((err) => logger.error({ err }, 'Failed to schedule reminders sweep'))
 
 server.listen(config.port, () => {
   logger.info(`🚀 Server running on port ${config.port} [${config.nodeEnv}]`)
@@ -25,6 +28,7 @@ async function shutdown(signal: string) {
   logger.info(`${signal} received — shutting down gracefully`)
   server.close(async () => {
     await ragQueue.close()
+    await remindersQueue.close()
     await prisma.$disconnect()
     redis.disconnect()
     logger.info('Server closed')
